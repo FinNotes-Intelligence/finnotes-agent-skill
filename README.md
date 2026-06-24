@@ -1,4 +1,4 @@
-# FinNotes Agent Skill
+# Skill: FinNotes Global Market News & Data Researcher Pack
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skill version](https://img.shields.io/badge/skill-v0.2.0-orange.svg)](CHANGELOG.md)
