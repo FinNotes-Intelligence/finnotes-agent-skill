@@ -1,0 +1,4 @@
+interface:
+  display_name: "Global_Market_News_and_Data_Researcher_pack_(FinNotes)"
+  short_description: "Use FinNotes API without wasting points"
+  default_prompt: "Use $Global_Market_News_and_Data_Researcher_pack_(FinNotes) to answer my market-data question from FinNotes."
