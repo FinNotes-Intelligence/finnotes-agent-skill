@@ -1,7 +1,7 @@
-# Skill: FinNotes Global Market News & Data Researcher Pack
+# Skill: FinNotes Global Market News & Data Researcher
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skill version](https://img.shields.io/badge/skill-v0.2.0-orange.svg)](CHANGELOG.md)
+[![Skill version](https://img.shields.io/badge/skill-v0.2.1-orange.svg)](CHANGELOG.md)
 [![API status](https://img.shields.io/badge/api-finnotes.com%2Fv1-green.svg)](https://api.finnotes.com/v1/health)
 
 Drop-in skill mount for AI agent runtimes (Claude Code, Codex, OpenClaw, and any agent that reads project-local `skills/` folders) so the agent can call the [FinNotes commercial API](https://platform.finnotes.com) without you ever pasting `fnp_` keys into chat.
@@ -35,19 +35,19 @@ Pick whichever fits your agent runtime:
 
 ```bash
 # Claude Code (user-level skill folder)
-git clone https://github.com/FinNotes-Intelligence/finnotes-agent-skill ~/.claude/skills/finnotes-api
+git clone https://github.com/FinNotes-Intelligence/finnotes-news-and-data-skill ~/.claude/skills/finnotes-api
 
 # Codex
-git clone https://github.com/FinNotes-Intelligence/finnotes-agent-skill ~/.codex/skills/finnotes-api
+git clone https://github.com/FinNotes-Intelligence/finnotes-news-and-data-skill ~/.codex/skills/finnotes-api
 
 # OpenClaw
-git clone https://github.com/FinNotes-Intelligence/finnotes-agent-skill ~/.openclaw/skills/finnotes-api
+git clone https://github.com/FinNotes-Intelligence/finnotes-news-and-data-skill ~/.openclaw/skills/finnotes-api
 
 # Project-level (any runtime that auto-loads project skills)
-git clone https://github.com/FinNotes-Intelligence/finnotes-agent-skill ./.agent/skills/finnotes-api
+git clone https://github.com/FinNotes-Intelligence/finnotes-news-and-data-skill ./.agent/skills/finnotes-api
 ```
 
-Or download the release tarball from the [Releases page](https://github.com/FinNotes-Intelligence/finnotes-agent-skill/releases) and extract to the same path.
+Or download the release tarball from the [Releases page](https://github.com/FinNotes-Intelligence/finnotes-news-and-data-skill/releases) and extract to the same path.
 
 ### 2. Mint an API key
 
@@ -120,7 +120,7 @@ If a `references/*` file in this skill drifts from the live doc, the live doc wi
 
 ## Versioning
 
-This skill is at `v0.2.0` — protocol revamp + news helper. Expect breaking changes before `v1.0.0`. The platform API contract itself is stable; what may change here is script CLI shape, error-code naming, and skill-manifest schema.
+This skill is at `v0.2.1` — naming alignment patch on top of the v0.2.0 protocol revamp. Expect breaking changes before `v1.0.0`. The platform API contract itself is stable; what may change here is script CLI shape, error-code naming, and skill-manifest schema.
 
 See [CHANGELOG.md](CHANGELOG.md).
 

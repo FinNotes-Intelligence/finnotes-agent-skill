@@ -2,6 +2,25 @@
 
 All notable changes to this skill are recorded here. Versioning follows [SemVer](https://semver.org/).
 
+## [0.2.1] — 2026-06-24
+
+Naming alignment patch on top of v0.2.0. Pure rename — no behavior, script, or schema changes.
+
+### Changed
+- **Repository renamed**: `FinNotes-Intelligence/finnotes-agent-skill` → `FinNotes-Intelligence/finnotes-news-and-data-skill`. GitHub serves a permanent 301 redirect on the old URL, so existing clones and bookmarks continue to work, but new installs should use the new URL.
+- **SKILL.md `name:`** dropped the `-pack` suffix:
+  `finnotes-global-market-news-and-data-researcher-pack` → `finnotes-global-market-news-and-data-researcher`.
+  Runtimes that cached the old `$<name>` from v0.2.0 need a one-time refresh.
+- **`agents/openai.yaml`** `display_name` now uses an ampersand (`&`) to match the README and matches the SKILL.md name (no `-pack`): `FinNotes Global Market News & Data Researcher`. `default_prompt` updated to reference the new name.
+- **`README.md` title** simplified: `Skill: FinNotes Global Market News & Data Researcher Pack` → `Skill: FinNotes Global Market News & Data Researcher` (drops the redundant "Pack" — "Skill:" already signals the artifact type).
+
+### Rationale
+"Pack" was redundant in two places (the README title's "Skill:" prefix already telegraphs the artifact type, and the SKILL name's "researcher-pack" double-tagged the noun). The previous repo name (`finnotes-agent-skill`) over-claimed: it took the whole "FinNotes agent skill" namespace for one specific product. The new repo name follows a `finnotes-<scope>-skill` pattern that leaves room for future scoped skills (e.g. `finnotes-portfolio-skill`) without renaming back.
+
+### Notes
+- All install commands in `README.md` now point at the new repo URL. The old URL still works via GitHub's redirect — no immediate user action required.
+- Scripts and references are unchanged from v0.2.0.
+
 ## [0.2.0] — 2026-06-24
 
 Protocol revamp + news helper. SKILL.md is rewritten around an explicit Control-Plane / Execution-Branch / Routing-Matrix / Output-Protocol structure (designed for stricter agent-runtime parsing) and a dedicated `finnotes_news.py` script replaces ad-hoc `finnotes_request.py GET "/news?…"` invocations for the common news workflows.

@@ -1,5 +1,5 @@
 ---
-name: "finnotes-global-market-news-and-data-researcher-pack"
+name: "finnotes-global-market-news-and-data-researcher"
 description: |-
   Use when the user asks what happened recently, what important news matters now, or asks to investigate, summarize, verify, explain, or analyze current events, financial/economic conditions, market moves, company updates, macro data, policy, regulation, central banks, commodities, FX, rates, crypto, or geopolitical developments. 
   
