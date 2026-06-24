@@ -53,7 +53,9 @@ Or download the release tarball from the [Releases page](https://github.com/FinN
 Sign in at [platform.finnotes.com/api-keys](https://platform.finnotes.com/api-keys) and click **Create New Key**. In the one-time-secret modal, click **`Download Agent JSON`** to download the structured handoff file (`finnotes-agent-key-<name>.json`).
 
 > [!NOTE]
-> **FinNotes is in Beta — Pro is free for 6 months.** Every new account currently gets a complimentary 6-month Pro subscription, which includes the API quota this skill consumes. No payment required during the Beta window. This notice will be removed as soon as the free-trial program ends.
+> **FinNotes is in Beta — Pro is free for 6 months.** Every new account that signs up **before 2027-01-01** receives a complimentary 6-month Pro subscription, which includes the API quota this skill consumes. No payment required during the Beta window.
+>
+> When the Beta program ends, **existing unexpired Pro subscriptions remain valid through their original 6-month term** — your access is not retroactively shortened. Only new sign-ups after the cutoff date will be subject to the post-Beta pricing.
 
 ### 3. Hand the key off to your agent
 
