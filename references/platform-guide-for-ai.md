@@ -2,10 +2,10 @@
 
 You are an AI agent. This guide is your map: where the resources live, what each plan can do, and the two most common request flows. Pair this with [`contract.txt`](./contract.txt) — that has the full specification of every endpoint.
 
-**You cannot call any `/v1/*` endpoint without an API key.** If the user has not explicitly provided a key (string starting `fnp_`), do not attempt API requests — they will all fail with `401 unauthorized` and burn the user's daily 40-free-error allowance for nothing. When you need data and have no key:
+**You cannot call any `/v1/*` endpoint without an API key.** If the user has not explicitly provided a key, do not attempt API requests — they will all fail with `401 unauthorized` and burn the user's daily 40-free-error allowance for nothing. When you need data and have no key:
 
-1. Ask the user: *"To pull live FinNotes data I need an API key. You can mint one at `https://platform.finnotes.com/api-keys` — paste the `fnp_...` string back to me."*
-2. Until they paste a key, fall back to the public editorial site (`https://finnotes.com/...` — no key required, free to read) for anything you can serve from there.
+1. Ask the user to mint a key at `https://platform.finnotes.com/api-keys`. The one-time-secret modal offers a **`Download Agent JSON`** button that produces a structured `finnotes.agent_key_handoff` v1 envelope. **Prefer the JSON handoff over plaintext paste**: if your runtime can read local files (Claude Code, Codex, etc.), ask the user for the downloaded file path and ingest it — do NOT echo file contents back to chat. If your runtime can't read files (pure chat surfaces), accept the `fnp_...` plaintext as a fallback and treat it as a secret (never repeat it back).
+2. Until they hand the key off, fall back to the public editorial site (`https://finnotes.com/...` — no key required, free to read) for anything you can serve from there.
 
 **Two-document rule for AI agents:**
 
@@ -54,7 +54,7 @@ Surface a link to these URLs when the user wants to "read the article" or "see t
 | Log | `/log` | Per-request audit (opt-in) |
 | Newsletter | `/newsletter` | Email / push subscriptions |
 | API Documents | `/api-documents` | HTML rendering of `contract.txt` |
-| AI Agent Skill | `/ai-agent-skill` | Mountable skill — coming soon |
+| AI Agent Skill | `/ai-agent-skill` | Drop-in skill mount + download |
 
 ### 1.3 Machine-readable
 
@@ -131,6 +131,22 @@ curl "https://api.finnotes.com/v1/news/market-news/us-cpi-cools-in-may" \
 
 Display tip: cite the `url` field back to the user so they can read it on finnotes.com if they want the rendered version.
 
+### 3.1 One-shot variant — read every article from today in full
+
+When the user wants **all of today** (not a curated couple), skip the list+detail dance and call:
+
+```
+# /v1/news/today/full — every today's article with full body + references + chart (chart-news only)
+curl "https://api.finnotes.com/v1/news/today/full" \
+  -H "Authorization: Bearer $FINNOTES_API_KEY"
+```
+
+Pricing is the **sum of the detail-endpoint costs** for what's returned: `1.00 × N(market-news) + 1.25 × N(chart-news) + 5.50 × N(column-article)`. So this saves HTTP round-trips, not points. Empty days charge 0 pt.
+
+`?type=market-news,chart-news` restricts the bundle (kebab-case, comma-separated; default returns all types). Use it when the user only wants news but not long-form columns — column-article alone is 5.50 pts/each and adds up fast.
+
+The response has a 100-article hard cap. Exceeding it returns `422 too_many_articles` (no charge) — that's a signal something is off upstream, not a paging hint. Don't retry without narrowing `type`.
+
 ---
 
 ## 4. Most common flow B — find a data series and pull its values
@@ -198,4 +214,4 @@ These are not enforced by the server, but they keep your user out of trouble:
 - [`contract.txt`](./contract.txt) — exhaustive API spec. **Fetch this on first session.**
 - <https://platform.finnotes.com/quick-start> — interactive cURL/Python walkthrough.
 - <https://platform.finnotes.com/pricing> — full per-endpoint cost table.
-- <https://platform.finnotes.com/ai-agent-skill> — mountable Skill (coming soon).
+- <https://platform.finnotes.com/ai-agent-skill> — mountable Skill (v0.1, download + install instructions).

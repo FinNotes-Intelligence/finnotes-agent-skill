@@ -1,7 +1,7 @@
 # FinNotes Agent Skill
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skill version](https://img.shields.io/badge/skill-v0.1.0-orange.svg)](CHANGELOG.md)
+[![Skill version](https://img.shields.io/badge/skill-v0.1.1-orange.svg)](CHANGELOG.md)
 [![API status](https://img.shields.io/badge/api-finnotes.com%2Fv1-green.svg)](https://api.finnotes.com/v1/health)
 
 Drop-in skill mount for AI agent runtimes (Claude Code, Codex, OpenClaw, and any agent that reads project-local `skills/` folders) so the agent can call the [FinNotes commercial API](https://platform.finnotes.com) without you ever pasting `fnp_` keys into chat.
@@ -106,7 +106,7 @@ If a `references/*` file in this skill drifts from the live doc, the live doc wi
 
 ## Versioning
 
-This skill is at `v0.1.0` — initial public release. Expect breaking changes before `v1.0.0`. The platform API contract itself is stable; what may change here is script CLI shape, error-code naming, and skill-manifest schema.
+This skill is at `v0.1.1` — snapshot refresh release. Expect breaking changes before `v1.0.0`. The platform API contract itself is stable; what may change here is script CLI shape, error-code naming, and skill-manifest schema.
 
 See [CHANGELOG.md](CHANGELOG.md).
 

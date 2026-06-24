@@ -183,6 +183,7 @@ Use the returned `type` and `slug` to request a priced detail payload with `GET 
 | Market-news detail | `/v1/news/market-news/{slug}` | Single market-news article payload. | 1.00 pt |
 | Chart-news detail | `/v1/news/chart-news/{slug}` | Chart article payload and chart binding metadata. | 1.25 pts |
 | Full Report | `/v1/reports/{id_or_slug}` | Long-form report content, sections, citations, and references. | 5.50 pts |
+| Today full bundle | `/v1/news/today/full` | Every today's published article with full body + references + chart (chart-news only). | Sum: `1.00 × N(market-news) + 1.25 × N(chart-news) + 5.50 × N(column-article)`. 0 pt if empty. |
 | Data-series list | `/v1/data-series/categories`, `/v1/data-series` | Category directory or series directory. Category items return `name`, `slug`, and `url`; series items return `name`, `slug`, `url`, and `unit`. | First 10 list requests per day are free; then 5.00 pts/request |
 | Data-series detail | `/v1/data-series/{slug}` | Detailed metadata for one series. Does not include data points or latest numeric value. | 1.00 pt |
 | Data-series points | `/v1/data-series/{slug}/points` | Selected data points for one series. Supports all, between dates, or since a date. | 1.00 pt per 250 returned data points, minimum 1.00 pt |
@@ -645,7 +646,131 @@ curl "https://api.finnotes.com/v1/news/cn_01jz9xd7nm?include_chart=true" \
 
 The response envelope and payload fields are the same as the corresponding `GET /v1/news/{type}/{slug}` response.
 
-## 10.4 Full Report
+## 10.4 Today Full Bundle
+
+```http
+GET /v1/news/today/full
+```
+
+Returns every published article from today (UTC date) with the same payload shape `/v1/news/{type}/{slug}` returns per article — `title`, `dek`, `body`, `references` (sources), and `chart` (chart-news only; `null` otherwise). One HTTP call replaces many detail calls for the common "give me today's full read" workflow.
+
+Required permission: `Basic`.
+
+### Pricing
+
+Per-type detail-equivalent sum:
+
+```text
+total_charge = 1.00 × N(market-news)
+             + 1.25 × N(chart-news)
+             + 5.50 × N(column-article)
+```
+
+Where N(type) is the number of articles of that type returned (after the type filter). Empty day (`N = 0` after filtering) charges `0.00 pt`.
+
+Bundle pricing matches what fetching each item individually via `/v1/news/{type}/{slug}` (or `/v1/reports/{id_or_slug}` for column-articles) would cost — this endpoint saves HTTP round-trips, not points.
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | string | `all` | Comma-separated kebab values: `market-news`, `chart-news`, `column-article`, or `all`. Restricts the bundle to one or more types. |
+
+### Hard cap
+
+If today contains more than **100** matching articles (after type filter), the endpoint returns `422 too_many_articles` and **does not charge points**. A normal newsroom day is well below this threshold; exceeding it indicates an upstream backfill or content-pipeline issue. Contact platform support if you see this in production.
+
+### Caching
+
+The bundled payload (article data + `meta`) is cached server-side for **5 minutes** keyed by `(date, type filter)`. Per-request fields (`request_id`, `points_charged`, `remaining_points`) are injected outside the cache. Articles published during the cache window become visible at the next refresh (≤ 5 min delay).
+
+### Request
+
+```bash
+curl "https://api.finnotes.com/v1/news/today/full" \
+  -H "Authorization: Bearer $FINNOTES_API_KEY" \
+  -H "Accept: application/json"
+```
+
+```bash
+# Restrict to market-news + chart-news (skip column-articles' 5.5pt each)
+curl "https://api.finnotes.com/v1/news/today/full?type=market-news,chart-news" \
+  -H "Authorization: Bearer $FINNOTES_API_KEY" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+```json
+{
+  "request_id": "req_a1b2c3d4...",
+  "points_charged": 7.75,
+  "remaining_points": 1342.25,
+  "data": [
+    {
+      "id": "mn_182",
+      "type": "market-news",
+      "slug": "cuba-approves-broad-economic-reforms-2026-06-19",
+      "title": "Cuba approves broad economic reforms...",
+      "url": "https://finnotes.com/market-news/cuba-approves-...",
+      "dek": "Two-line teaser describing the article.",
+      "body": "<full HTML body>",
+      "published_at": "2026-06-24T08:00:00Z",
+      "importance_score": 9.1,
+      "anomaly_score": 7.2,
+      "references": [
+        { "title": "Reuters report", "url": "https://reuters.com/..." }
+      ],
+      "chart": null
+    },
+    {
+      "id": "cn_10",
+      "type": "chart-news",
+      "slug": "aluminum-reached-3654-on-may-1-2026-06-10",
+      "title": "Aluminum reached 3,654 on May 1...",
+      "url": "https://finnotes.com/charts/aluminum-reached-3654-...",
+      "dek": "...",
+      "body": "<full HTML body>",
+      "published_at": "2026-06-24T06:30:00Z",
+      "importance_score": 7.5,
+      "anomaly_score": 6.8,
+      "references": [],
+      "chart": {
+        "id": "chart_aluminum-spot",
+        "title": "Aluminum spot price",
+        "is_featured": true,
+        "window_type": "dynamic",
+        "dynamic_window_months": 12,
+        "window_start_date": null,
+        "window_end_date": null,
+        "series": [
+          { "series_id": "ALUMINUM", "label": "Aluminum (USD/t)" }
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "date": "2026-06-24",
+    "count": 2,
+    "by_type": { "market-news": 1, "chart-news": 1 }
+  }
+}
+```
+
+`meta.by_type` only contains keys for the types requested via the `type` filter. `meta.count` equals `len(data)`.
+
+### Errors
+
+| Status | Code | When |
+| --- | --- | --- |
+| `400` | `invalid_type` | `type` contains a value other than the four allowed kebab strings. |
+| `401` | `unauthorized` | Missing or invalid API key. |
+| `402` | `insufficient_points` | Account does not have enough points for the total bundle charge. |
+| `403` | `permission_denied` | Key lacks the `basic` permission. |
+| `422` | `too_many_articles` | Today's matching count exceeds the 100-article cap (upstream issue). |
+| `429` | `rate_limit_exceeded` | Account exceeded the per-second rate limit. |
+
+## 10.5 Full Report
 
 ```http
 GET /v1/reports/{id_or_slug}
@@ -702,7 +827,7 @@ The `id_or_slug` path parameter accepts either a `ca_<n>` typed id (matching the
 }
 ```
 
-## 10.5 Data-Series Lists
+## 10.6 Data-Series Lists
 
 ### Data Categories
 
@@ -861,7 +986,7 @@ After the daily free data-series list allowance is exhausted, the same endpoint 
 }
 ```
 
-## 10.6 Data-Series Detail
+## 10.7 Data-Series Detail
 
 ```http
 GET /v1/data-series/{slug}
@@ -916,7 +1041,7 @@ curl "https://api.finnotes.com/v1/data-series/gold" \
 }
 ```
 
-## 10.7 Data-Series Points
+## 10.8 Data-Series Points
 
 ```http
 GET /v1/data-series/{slug}/points
@@ -1068,7 +1193,7 @@ curl "https://api.finnotes.com/v1/data-series/gold/points?range=between&start_da
 }
 ```
 
-## 10.8 Own Notes List
+## 10.9 Own Notes List
 
 ```http
 GET /v1/notes
@@ -1121,7 +1246,7 @@ curl "https://api.finnotes.com/v1/notes?limit=50" \
 
 After the daily free Own Notes list allowance is exhausted, the same endpoint returns `points_charged: 1.0`.
 
-## 10.9 Notes Download
+## 10.10 Notes Download
 
 ```http
 GET /v1/notes/{note_id}
@@ -1158,7 +1283,7 @@ curl "https://api.finnotes.com/v1/notes/note_01jz9z9x6m" \
 }
 ```
 
-## 10.10 Notes Import / Upload
+## 10.11 Notes Import / Upload
 
 ```http
 POST /v1/notes/import
@@ -1214,7 +1339,7 @@ curl "https://api.finnotes.com/v1/notes/import" \
 }
 ```
 
-## 10.11 Account Points
+## 10.12 Account Points
 
 ```http
 GET /v1/account/points
@@ -1252,7 +1377,7 @@ curl "https://api.finnotes.com/v1/account/points" \
 }
 ```
 
-## 10.12 Monthly Usage
+## 10.13 Monthly Usage
 
 ```http
 GET /v1/usage
@@ -1322,7 +1447,7 @@ curl "https://api.finnotes.com/v1/usage?range=this_month&scope=account" \
 }
 ```
 
-## 10.13 Log Settings
+## 10.14 Log Settings
 
 ```http
 GET /v1/logs/settings
@@ -1366,7 +1491,7 @@ curl "https://api.finnotes.com/v1/logs/settings" \
 }
 ```
 
-## 10.14 Request Logs
+## 10.15 Request Logs
 
 ```http
 GET /v1/logs
@@ -1432,7 +1557,7 @@ curl "https://api.finnotes.com/v1/logs?range=last_24_hours&status=all" \
 }
 ```
 
-## 10.15 Newsletter Preferences
+## 10.16 Newsletter Preferences
 
 > **Status: Phase 2 — not yet mounted in the API router.** Reading or writing this endpoint currently returns `404`. The contract is final; mounting is tracked separately. Do not integrate against this endpoint until announced. Newsletter preferences can still be managed via the developer console at `https://platform.finnotes.com/newsletter`.
 
@@ -1530,7 +1655,7 @@ curl "https://api.finnotes.com/v1/newsletter/preferences" \
 
 > ⏸️ **Sections 10.16, 10.17, and 11 are Phase 2 / Agent Skill scope and are not part of v1 launch.** The preference-save endpoints may be implemented earlier to let users configure intent, but the delivery side (webhook URL registration, HMAC signature spec, server-initiated retry, dead-letter handling) must be finalized before any API Push or Email push is actually delivered. Until then, setting `channels.api_push.enabled=true` returns `422 validation_error` with `code: "feature_unavailable"`.
 
-## 10.16 Trace Data Release Push Preferences
+## 10.17 Trace Data Release Push Preferences
 
 ```http
 GET /v1/push/trace-data-release/preferences
@@ -1623,7 +1748,7 @@ curl "https://api.finnotes.com/v1/push/trace-data-release/preferences" \
 }
 ```
 
-## 10.17 Real-Time News Push Preferences
+## 10.18 Real-Time News Push Preferences
 
 ```http
 GET /v1/push/news/preferences
@@ -1710,7 +1835,7 @@ curl "https://api.finnotes.com/v1/push/news/preferences" \
 }
 ```
 
-## 10.18 Notifications Preferences
+## 10.19 Notifications Preferences
 
 > **Status: Phase 2 — not yet mounted in the API router.** Reading or writing this endpoint currently returns `404`. Notifications can still be configured via the developer console.
 

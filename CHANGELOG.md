@@ -2,6 +2,19 @@
 
 All notable changes to this skill are recorded here. Versioning follows [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-06-24
+
+Snapshot refresh for the `GET /v1/news/today/full` bundled endpoint added to the platform.
+
+### Changed
+- `references/api-platform-contract.md` — synced to platform contract dated 2026-06-24, includes new §10.4 "Today Full Bundle" + §5.2 pricing row.
+- `references/platform-guide-for-ai.md` — synced; new §3.1 one-shot variant for "read every article from today in full".
+- `references/platform-for-ai-index.md` — synced.
+
+### Notes
+- No script or manifest changes. Scripts still use the same `/v1/*` Bearer auth interface; the new endpoint is reachable via `finnotes_request.py GET "/news/today/full"`.
+- This is a snapshot-only sync release. Live docs at `https://platform.finnotes.com/docs/for-ai/` always win when in doubt.
+
 ## [0.1.0] — 2026-06-24
 
 Initial public release.
